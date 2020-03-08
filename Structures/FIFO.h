@@ -10,17 +10,18 @@
 
 
 typedef struct{
-    unsigned long * tab;
-    size_t allocsize;
-    size_t begin;
-    size_t sz;
+    unsigned long ** tab;
+    unsigned long allocsize;
+    unsigned long begin;
+    unsigned long sz;
 }fifo;
 
-void mkFifo(size_t maxsize, fifo * t);
+void mkFifo(unsigned long maxsize, fifo * t);
 int empty(fifo * f);
 int full(fifo * f);
-size_t size(fifo * t);
+
+unsigned long size(fifo * t);
 void printTapis(fifo *t);
-void enfiler(fifo *t, unsigned long  p);
-unsigned long  defiler(fifo * t);
+void enfiler(fifo *t, unsigned long p);
+unsigned long * defiler(fifo * t);
 #endif /* FIFO_H_ */

@@ -32,14 +32,8 @@ Up to 200 million edges on my laptop with 8G of RAM: takes more or less 4G of RA
 #define NLINKS 100000000 //maximum number of edges for memory allocation, will increase if needed
 
 
-//compute the maximum of three unsigned long
-unsigned long max3(unsigned long a,unsigned long b,unsigned long c){
-    a=(a>b) ? a : b;
-    return (a>c) ? a : c;
-}
-
 //reading the edgelist from file
-adjlist* readedgelist(char* input){
+adjlist* readadjlist(char* input){
     unsigned long e1=NLINKS;
     FILE *file=fopen(input,"r");
     FILE *results=fopen("bfs-RESULTS.txt","a");
@@ -52,8 +46,8 @@ adjlist* readedgelist(char* input){
     g->edges=malloc(e1*sizeof(edge));//allocate some RAM to store edges
     unsigned long lines =0;
 
-    while (fscanf(file,"%lu %lu", &(g->edges[g->e].s), &(g->edges[g->e].t))==2) {
-        g->n=max3(g->n,g->edges[g->e].s,g->edges[g->e].t);
+    while (fscanf(file,"%lu %lu\n", &(g->edges[g->e].s), &(g->edges[g->e].t))==2) {
+        g->n= maxedgelist(g->n, g->edges[g->e].s, g->edges[g->e].t);
         fprintf(results,"%d %d\n",(int) g->edges[g->e].s,(int)g->edges[g->e].t);
         if (++(g->e)==e1) {//increase allocated RAM if needed
             e1+=NLINKS;
@@ -77,7 +71,6 @@ void mkadjlist(adjlist* g, char* input){
     unsigned long i,u,v;
     unsigned long *d=calloc(g->n,sizeof(unsigned long));
 
-    g->t=0;
 
     for (i=0;i<g->e;i++) {
         d[g->edges[i].s]++;
@@ -99,28 +92,6 @@ void mkadjlist(adjlist* g, char* input){
         g->adj[ g->cd[u] + d[u]++ ]=v;
         g->adj[ g->cd[v] + d[v]++ ]=u;
     }
-
-    /** COUNTING THE NUMBER OF NODES **//*
-    FILE *fp;
-    char path[1035];
-    *//* Open the command for reading. *//*
-    char str[500];
-    strcpy(str, "wc -l ");
-    strcat(str, input);
-
-    fp = popen(str, "r");
-    if (fp == NULL) {
-        printf("Failed to run command\n" );
-        exit(1);
-    }
-
-    *//* Read the output a line at a time - output it.*//*
-    const char * str2 = fgets(path, sizeof(path), fp);
-   g->k = (unsigned long )atoi(str2);*/
-
-/*
-    *//* close *//*
-    pclose(fp);*/
 
     free(d);
     //free(g->edges);
@@ -149,8 +120,6 @@ void print_graph_adj(adjlist * g){
             printf("voisin de %d: %ld \n", i, g->adj[j]);
         }
     }
-
-
 }
 
 

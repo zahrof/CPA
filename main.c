@@ -10,7 +10,7 @@ int main(int argc,char** argv){
     t1=time(NULL);
 
     printf( "Reading edgelist from file %s\n",argv[1]);
-    g=readedgelist(argv[1]);
+    g= readadjlist(argv[1]);
 
     fprintf(fp,"Value of the node max: %lu\n",g->n);
     fprintf(fp,"Number of edges: %lu\n",g->e);
@@ -20,8 +20,8 @@ int main(int argc,char** argv){
 
     // algorithm to implement
 //   breadthFirstSearch(g,fp);
-    diameter(g, fp);
-    //triangles(g, argv[1]);
+//    diameter(g, fp);
+    triangles(g, argv[1]);
 
     t2=time(NULL);
 
