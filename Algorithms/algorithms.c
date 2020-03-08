@@ -173,31 +173,29 @@ void triangles(adjlist * g, char  *fp) {
     // il y a une autre méthode aussi, à expliquer dans le rapport et si temps à implementer
     /*********** ORDERING DEGREES  ***************/
     unsigned long *ordered = (unsigned long *) calloc(g->n, sizeof(unsigned long));
-    for (int j = 0; j < g->n; j++) {
-        ordered[j] = j;
-    }
+    for (unsigned long j = 0; j < g->n; j++)  ordered[j] = j;
 
     g_global = g;
     qsort(ordered, g->n, sizeof(unsigned long), compare);
-    printf("hey");
 
-    for (int j = 0; j < g->n; j++) {
+    for (unsigned long j = 0; j < g->n; j++) {
         printf("ordered : %lu\n", ordered[j]);
     }
     /*********** REINDEXING DEGREES  ***************/
-    FILE *file = fopen(fp, "r");
-    FILE * f = fopen ("aux-triangle.txt","w");
+    FILE *file = fopen(fp, "r"); // file to read
+    FILE * f = fopen ("aux-triangle.txt","w"); // file to write
     unsigned long *x = malloc(sizeof(unsigned long));
     unsigned long *w = malloc(sizeof(unsigned long));
 
     unsigned long *aux = (unsigned long *) calloc(g->n, sizeof(unsigned long));
     while (fscanf(file, "%lu %lu", &x, &w) == 2){
+        printf("x: %lu, w: %lu\n", x, w);
         for (int i = 0; i < g->n; i++){
             if (ordered[i]==w) aux[ordered[i]]=i;
             if (ordered[i]==x)aux[ordered[i]]=i;
         }
-        // faire le fprintf d'une traite?
-        fprintf(f, "%lu %lu\n", aux[(int)x], aux[(int)w]);
+        // faire le fprintf d'une traite pour gagner du temps?
+        fprintf(f, "%lu %lu\n", aux[(unsigned long)x], aux[(unsigned long)w]);
     }
     fclose(f);
 
@@ -206,7 +204,6 @@ void triangles(adjlist * g, char  *fp) {
     free(aux);
     /*********** RECREATING GRAPH  ***************/
     FILE * f2 = fopen ("aux-triangle.txt","a");
-    adjlist* g_aux;
     g_global= readadjlist("aux-triangle.txt");
 
     printf("Building the adjacency list\n");
