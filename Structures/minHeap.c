@@ -18,14 +18,13 @@ void swap(Pair *x, Pair *y)
     Pair temp = *x;
     *x = *y;
     *y = temp;
-    int tempId= x->id;
-    x->id=y->id;
-    y->id=tempId;
 }
 
-void makePair(adjlist * g, unsigned long  node, Pair * p, unsigned long  degree){
+Pair * makePair(unsigned long  node, unsigned long  degree){
+    Pair * p = malloc(sizeof(Pair));
     p->degree= degree;
     p->node = node;
+    return p;
 }
 
 int equalPair(Pair * p1, Pair *  p2){
@@ -63,29 +62,18 @@ Pair getPair(MinHeap * mh, Pair * p){
     }
 }
 
-int getIndex(MinHeap * mh, Pair * p){
-    for (int i =1; i<=mh->heap_size; i++){
-        if(equalPair(&mh->array[i],p)){
-            printf("potatoe");
-            return i;
-        }
-    }
-}
-
-
-
 // to extract the root which is the minimum element
-Pair extractMin(MinHeap * mh){
+unsigned long extractMin(MinHeap * mh){
     if (mh->heap_size <= 0) {
         Pair p;
         p.degree=-1;
         p.node=-1;
-        return p;
+        return p.node;
     }
     if (mh->heap_size == 1)
     {
         mh->heap_size--;
-        return mh->array[0];
+        return mh->array[0].node;
     }
 
     // Store the minimum value, and remove it from heap
@@ -94,30 +82,13 @@ Pair extractMin(MinHeap * mh){
     mh->heap_size--;
     MinHeapify(mh, 0);
 
-    return root;
+    return root.node;
 }
 
-// Decreases key value of key at index i to new_val
-void decreaseKey(MinHeap * mh, int i, Pair new_val){
-    mh->array[i] = new_val;
-    while (i != 0 && mh->array[parent(i)].degree > mh->array[i].degree)
-    {
-        swap(&mh->array[i], &mh->array[parent(i)]);
-        i = parent(i);
-    }
-}
-
-// Returns the minimum key (key at root) from min heap
-Pair getMin(MinHeap * mh) { return mh->array[0]; }
-
-// Deletes a key stored at index i
-void deleteKey(MinHeap * mh,int i){
-   // decreaseKey(mh, i, );
-    extractMin(mh);
-}
 
 // Inserts a new key 'k'
-void insertKey(MinHeap * mh, Pair k){
+void insertKey(MinHeap * mh, unsigned long degree, unsigned long node){
+    Pair * k = makePair(node, degree);
     if (mh->heap_size == mh->capacity)
     {
         puts("\nOverflow: Could not insertKey\n");
@@ -127,12 +98,16 @@ void insertKey(MinHeap * mh, Pair k){
     // First insert the new key at the end
     mh->heap_size++;
     int i = mh->heap_size - 1;
-    mh->array[i] = k;
+    mh->array[i] = *k;
 
     // Fix the min heap property if it is violated
     while (i != 0 && mh->array[parent(i)].degree > mh->array[i].degree)
     {
         swap(&mh->array[i], &mh->array[parent(i)]);
         i = parent(i);
-    }mh->array[i].id=i;
+    };
+}
+
+void deleteMinHeap(MinHeap * mh){
+    free(mh->array);
 }

@@ -138,125 +138,105 @@ static int compare (const void * first, const void * second){
 }
 
 
-int sizeIntersection  ( unsigned long * U,int sizeU, unsigned long * V, int sizeV){
-    int sizeW=0;
-
-    for (int i=0; i< sizeU; i++ ){
-        for (int j=0; j < sizeV; j++){
-            if (U[i]==V[j]){
-                sizeW++;
-            }
-        }
-    }
-    return sizeW;
-}
-
-unsigned long * intersection ( unsigned long * U,int sizeU, unsigned long * V, int sizeV){
-
-    int size = sizeIntersection(U,sizeU,V, sizeV);
-    unsigned long * W = malloc (size * sizeof(unsigned long));
-
-    int curW=0;
-    for (int i=0; i< sizeU; i++ ){
-        for (int j=0; j < sizeV; j++){
-            if (U[i]==V[j]){
-                W[curW]=U[i];
-                curW++;
-            }
-        }
-    }
-
-    return W;
-}
-
 void triangles(adjlist * g, char  *fp) {
-    // il y a une autre méthode aussi, à expliquer dans le rapport et si temps à implementer
+    g_global = g;
     /*********** ORDERING DEGREES  ***************/
     unsigned long *ordered = (unsigned long *) calloc(g->n, sizeof(unsigned long));
-    for (unsigned long j = 0; j < g->n; j++)  ordered[j] = j;
 
-    g_global = g;
-    qsort(ordered, g->n, sizeof(unsigned long), compare);
+    MinHeap min;
+    makeMinHeap(&min, g->n);
+    for (unsigned long i = 0; i < g->n; i++) {
+        unsigned long degree = g_global->cd[i + 1] - g_global->cd[i];
+        if (degree == 0) continue;
+        insertKey(&min, degree, i);
+    }
+    unsigned long compteur = 1;
+    unsigned long size_heap = min.heap_size;
+    for (int i = 0; i < size_heap; i++) {
+        unsigned long u = extractMin(&min);
+        printf(" défilage  %lu\n", u);
+        ordered[u] = compteur;
+        compteur++;
+    }
+    deleteMinHeap(&min);
 
     for (unsigned long j = 0; j < g->n; j++) {
-        printf("ordered : %lu\n", ordered[j]);
+        if (ordered[j] == 0) continue;
+        printf("ordered : %lu is %lu\n", ordered[j], j);
     }
-    /*********** REINDEXING DEGREES  ***************/
+
+    //*********** REINDEXING DEGREES  ***************//
     FILE *file = fopen(fp, "r"); // file to read
-    FILE * f = fopen ("aux-triangle.txt","w"); // file to write
+    FILE *f = fopen("aux-triangle.txt", "w"); // file to write
     unsigned long *x = malloc(sizeof(unsigned long));
     unsigned long *w = malloc(sizeof(unsigned long));
 
-    unsigned long *aux = (unsigned long *) calloc(g->n, sizeof(unsigned long));
-    while (fscanf(file, "%lu %lu", &x, &w) == 2){
+    unsigned long *aux = (unsigned long *) calloc(g_global->n, sizeof(unsigned long));
+    while (fscanf(file, "%lu %lu", &x, &w) == 2) {
         printf("x: %lu, w: %lu\n", x, w);
-        for (int i = 0; i < g->n; i++){
-            if (ordered[i]==w) aux[ordered[i]]=i;
-            if (ordered[i]==x)aux[ordered[i]]=i;
-        }
         // faire le fprintf d'une traite pour gagner du temps?
-        fprintf(f, "%lu %lu\n", aux[(unsigned long)x], aux[(unsigned long)w]);
+        fprintf(f, "%lu %lu\n", ordered[(unsigned long) x], ordered[(unsigned long) w]);
     }
     fclose(f);
 
     free(g);
     free(ordered);
     free(aux);
-    /*********** RECREATING GRAPH  ***************/
-    FILE * f2 = fopen ("aux-triangle.txt","a");
-    g_global= readadjlist("aux-triangle.txt");
+    //*********** RECREATING GRAPH  ***************//
+    FILE *f2 = fopen("aux-triangle.txt", "a");
+    g_global = readadjlist("aux-triangle.txt");
 
     printf("Building the adjacency list\n");
     mkadjlist(g_global, "aux-triangle.txt");
 
     fclose(f2);
 
-    /*********** STOCKING NEIGHBORD OF ..  ***************/
-    unsigned long * neighbors = malloc(NLINKS * sizeof(unsigned long));
-    unsigned long * cdAux = calloc (g_global->n, sizeof(unsigned long));
+    //*********** STOCKING NEIGHBORD OF ..  ***************//
+    unsigned long *neighbors = malloc(NLINKS * sizeof(unsigned long));
+    unsigned long *cdAux = calloc(g_global->n, sizeof(unsigned long));
     edgelist elist;
-    initalize_edgelist(&elist,g_global->n);
+    initalize_edgelist(&elist, g_global->n);
     fifo fifo;
     mkFifo((size_t) g_global->n, &fifo);
-    cdAux[0]=0;
-    unsigned long sizeFifo =0;
+    cdAux[0] = 0;
+    unsigned long sizeFifo = 0;
 
-    for ( unsigned long i =1; i < g_global->n; i++){
-        for (int j = g_global->cd[i]; j < g_global->cd[i+1]; j++){
-            if (g_global->adj[j]> i) {
+    for (unsigned long i = 1; i < g_global->n; i++) {
+        for (int j = g_global->cd[i]; j < g_global->cd[i + 1]; j++) {
+            if (g_global->adj[j] > i) {
                 enfiler(&fifo, g_global->adj[j]);
-                add_edge(&elist, i,  g_global->adj[j]);
+                add_edge(&elist, i, g_global->adj[j]);
             }
         }
-        cdAux[i]= cdAux[i-1]+fifo.sz;
+        cdAux[i] = cdAux[i - 1] + fifo.sz;
         sizeFifo = sizeFifo + size(&fifo);
-        for(unsigned long j=cdAux[i-1]; j < cdAux[i]; j++) neighbors[j]=*defiler(&fifo);
+        for (unsigned long j = cdAux[i - 1]; j < cdAux[i]; j++) neighbors[j] = *defiler(&fifo);
 
         mkFifo((size_t) g_global->n, &fifo);
     }
-    for (unsigned long i =1; i < g_global->n; i ++)
+    for (unsigned long i = 1; i < g_global->n; i++)
         printf("cdAux[%d]:%lu\n", i, cdAux[i]);
-    neighbors=realloc(neighbors, sizeFifo * sizeof(unsigned long));
-    unsigned long * p = neighbors;
+    neighbors = realloc(neighbors, sizeFifo * sizeof(unsigned long));
+    unsigned long *p = neighbors;
 
-    for (unsigned long i =1; i < g_global->n; i ++){
-        qsort(p,cdAux[i]-cdAux[i-1], sizeof(unsigned long), compare);
-       for(int j=cdAux[i-1]; j < cdAux[i]; j++) p++;
+    for (unsigned long i = 1; i < g_global->n; i++) {
+        qsort(p, cdAux[i] - cdAux[i - 1], sizeof(unsigned long), compare);
+        for (int j = cdAux[i - 1]; j < cdAux[i]; j++) p++;
     }
-    for (unsigned long i =1; i < sizeFifo; i ++){
-        for(unsigned long j = cdAux[i-1]; j <cdAux[i]; j++){
-           // printf("voisin de %d: %lu \n", i, neighbors[j]);
+    for (unsigned long i = 1; i < sizeFifo; i++) {
+        for (unsigned long j = cdAux[i - 1]; j < cdAux[i]; j++) {
+            // printf("voisin de %d: %lu \n", i, neighbors[j]);
         }
     }
 
-    for(unsigned long i =0 ; i < elist.e; i++){
-            for(unsigned long j = cdAux[elist.edges[i].s-1]; j <cdAux[elist.edges[i].s]; j++){
-                for(unsigned long k = cdAux[(elist.edges[i].t)-1]; k <cdAux[elist.edges[i].t]; k++){
-                  if(neighbors[k]==neighbors[j]) printf ("triangle %lu %lu %lu", neighbors[j], elist.edges[i].t, elist.edges[i].s);
-                }
+    for (unsigned long i = 0; i < elist.e; i++) {
+        for (unsigned long j = cdAux[elist.edges[i].s - 1]; j < cdAux[elist.edges[i].s]; j++) {
+            for (unsigned long k = cdAux[(elist.edges[i].t) - 1]; k < cdAux[elist.edges[i].t]; k++) {
+                if (neighbors[k] == neighbors[j])
+                    printf("triangle %lu %lu %lu", neighbors[j], elist.edges[i].t, elist.edges[i].s);
             }
-            printf("\n\n");
+        }
+        printf("\n\n");
     }
 }
-
 
