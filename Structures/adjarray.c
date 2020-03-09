@@ -94,6 +94,8 @@ void mkadjlist(adjlist* g, char* input){
     }
 
     free(d);
+    //g->edges= realloc(g->e, sizeof(edge));
+   // g->e = 0;
     //free(g->edges);
 }
 
@@ -120,6 +122,11 @@ void print_graph_adj(adjlist * g){
             printf("voisin de %d: %ld \n", i, g->adj[j]);
         }
     }
+}
+
+void addeEdge(adjlist *g, unsigned long s, unsigned long t){
+    g->edges[g->e].s=s;
+    g->edges[g->e].s=t;
 }
 
 

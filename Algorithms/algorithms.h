@@ -16,7 +16,7 @@ void BFS(adjlist *g, fifo *f, int *marked, unsigned long s, int * size, FILE * f
 void breadthFirstSearch(adjlist * g,FILE *fp);
 void diameter(adjlist *g, FILE *fp);
 
-void triangles(adjlist * g, char * fp);
+void triangles(adjlist * g, char * fp,char * results);
 
 
 #endif //CPA_TRUE_ALGORITHMS_H

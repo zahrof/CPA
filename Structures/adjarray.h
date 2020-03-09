@@ -26,6 +26,8 @@ unsigned long maxadjarray(unsigned long a, unsigned long b, unsigned long c);
 //reading the edgelist from file
 adjlist* readadjlist(char* input);
 
+void addeEdge(adjlist *g, unsigned long s, unsigned long t);
+
 //building the adjacency matrix
 void mkadjlist(adjlist* g, char* input);
 
